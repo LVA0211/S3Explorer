@@ -16,12 +16,12 @@
     <Filter Include="Resource Files\Shaders">
       <UniqueIdentifier>{40d16911-25a8-4cb6-8d23-58b5b3db8a3a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Meshes">
+      <UniqueIdentifier>{f08aabe3-1902-4da9-8d9f-48875eefe45f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SphericalRendering.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Libraries\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="shaderClass.cpp">
@@ -37,6 +37,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="External\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,6 +66,15 @@
     </None>
     <None Include="default.frag">
       <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Utah_teapot.stl">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
+    <None Include="Meshes\single_triangle.stl">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
+    <None Include="Meshes\teapot_tiny.stl">
+      <Filter>Resource Files\Meshes</Filter>
     </None>
   </ItemGroup>
 </Project>

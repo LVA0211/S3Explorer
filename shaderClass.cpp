@@ -34,16 +34,15 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile)
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
 	// Compile the Vertex Shader into machine code
 	glCompileShader(vertexShader);
-
 	// Create Fragment Shader Object and get its reference
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	// Attach Fragment Shader source to the Fragment Shader Object
 	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
 	// Compile the Vertex Shader into machine code
 	glCompileShader(fragmentShader);
-
 	// Create Shader Program Object and get its reference
 	ID = glCreateProgram();
+	std::cout << ID << std::endl;
 	// Attach the Vertex and Fragment Shaders to the Shader Program
 	glAttachShader(ID, vertexShader);
 	glAttachShader(ID, fragmentShader);
