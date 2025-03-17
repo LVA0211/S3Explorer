@@ -110,10 +110,8 @@
         //---End of Setup--//
 
         Object test_obj;
-        test_obj.loadMesh("Meshes\\teapot_tiny.stl");
-        test_obj.debugPrintVertexData(0, 10);
-        test_obj.debugPrintVertexData(10, 20);
-        test_obj.debugPrintVertexData(20, 30);
+        test_obj.loadMesh("Meshes\\tiny_teapot.glb");
+        test_obj.transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
 
         // Triangle vertices
         GLfloat vertices_test_cube[] = {

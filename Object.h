@@ -42,6 +42,7 @@ public:
 
 	void debugPrintVertexData(size_t start, size_t end);
 
+	glm::mat4 transform = glm::mat4(1.0f);
 private:
 	void setupBuffers();
 	void clear();
@@ -57,6 +58,4 @@ private:
 	VAO vao;
 	VBO vbo;
 	EBO ebo;
-
-	glm::mat4 transform = glm::mat4(1.0f);
 };

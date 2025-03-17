@@ -43,7 +43,7 @@ void Object::loadMesh(const char* path) {
 
 	Assimp::Importer importer;
 
-    const aiScene* pScene = importer.ReadFile(path, aiProcess_Triangulate |aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+    const aiScene* pScene = importer.ReadFile(path, aiProcess_Triangulate |aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
 
     if (!pScene || !pScene->mRootNode) {
         printf("Error parsing '%s': '%s'\n", path, importer.GetErrorString());

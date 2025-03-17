@@ -158,6 +158,7 @@
     <None Include="default.vert" />
     <None Include="Meshes\single_triangle.stl" />
     <None Include="Meshes\teapot_tiny.stl" />
+    <None Include="Meshes\tiny_teapot.glb" />
     <None Include="Utah_teapot.stl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

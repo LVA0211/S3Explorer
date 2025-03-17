@@ -76,5 +76,8 @@
     <None Include="Meshes\teapot_tiny.stl">
       <Filter>Resource Files\Meshes</Filter>
     </None>
+    <None Include="Meshes\tiny_teapot.glb">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
   </ItemGroup>
 </Project>

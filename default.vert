@@ -9,21 +9,24 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-out float dist;
+out float light;
 out vec3 color;
+
+const vec4 localCam = vec4(0,0,0,1);
 
 void main() {
     
-    vec4 local = view * model * aPos;
+    vec4 local = normalize(view * model * aPos);
+    vec4 localNormal = normalize(view * model * aNormal);
+
     vec4 projected = projection * local;
     gl_Position = projected;
 
-    dist = acos(local.w/length(local));
+    light = dot(normalize(localCam-dot(localCam,local) * local), localNormal);
 
     if(projected.z<0){
-        color = vec3(1.0f,0.f,0.f);
+        color = vec3(1.f,0.f,0.f);
     } else {
-        dist = 2.f * PI - dist;
         color = vec3(0.0f,1.f,0.f);
     }
 }
