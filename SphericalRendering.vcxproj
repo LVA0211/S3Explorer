@@ -110,6 +110,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalUsingDirectories>%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>$(SolutionDir)External\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,8 +159,12 @@
     <None Include="default.vert" />
     <None Include="Meshes\single_triangle.stl" />
     <None Include="Meshes\teapot_tiny.stl" />
+    <None Include="Meshes\tiny_teapet.gltf" />
     <None Include="Meshes\tiny_teapot.glb" />
     <None Include="Utah_teapot.stl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Textures\aee.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

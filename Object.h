@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include "VAO.h"
 #include "VBO.h"
@@ -29,7 +30,7 @@ class Object {
 public:
 	Object();
 
-	void Draw(GLint modelLoc);
+	void Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc);
 
 	void loadMesh(const char* path);
 
@@ -46,14 +47,19 @@ public:
 private:
 	void setupBuffers();
 	void clear();
-
 	void linkToBufferObjects();
+	void loadTexture(const std::string& path);
 
-	unsigned int vertex_data_type = VERTEX_RGB;
+	bool uses_texture = false;
+	glm::vec3 diffuse_color = glm::vec3(0.f);
+	//(X,Y,Z,W, nX,nY,nZ,nW, U,V)
 	std::vector<GLfloat> vertex_data;
 
 	unsigned int element_type = GL_TRIANGLES;
 	std::vector<GLuint> indices;
+
+	GLuint textureID = 0;
+	std::string texture_path;
 
 	VAO vao;
 	VBO vbo;

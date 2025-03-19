@@ -19,6 +19,9 @@
     <Filter Include="Resource Files\Meshes">
       <UniqueIdentifier>{f08aabe3-1902-4da9-8d9f-48875eefe45f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{07ecee26-0677-438e-a4f6-7800bba58a8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SphericalRendering.cpp">
@@ -79,5 +82,13 @@
     <None Include="Meshes\tiny_teapot.glb">
       <Filter>Resource Files\Meshes</Filter>
     </None>
+    <None Include="Meshes\tiny_teapet.gltf">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Textures\aee.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

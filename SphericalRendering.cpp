@@ -110,7 +110,7 @@
         //---End of Setup--//
 
         Object test_obj;
-        test_obj.loadMesh("Meshes\\tiny_teapot.glb");
+        test_obj.loadMesh("Meshes\\tiny_teapet.gltf");
         test_obj.transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
 
         // Triangle vertices
@@ -240,6 +240,10 @@
         GLint modelLoc = shaderProgram.getUniformLocation("model");
         GLint viewLoc = shaderProgram.getUniformLocation("view");
         GLint projLoc = shaderProgram.getUniformLocation("projection");
+        GLint samplerLoc = shaderProgram.getUniformLocation("diffuseTex");
+        GLint usestextureboolLoc = shaderProgram.getUniformLocation("uses_texture");
+        GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffusecolorLoc");
+        GLint isbackhemisphereboolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
 
         // Main render loop
         while (!glfwWindowShouldClose(window))
@@ -264,20 +268,23 @@
 
             }
             view = glm::inverse(camera);
-            
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-            glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_front));
 
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_front));
+            glUniform1i(isbackhemisphereboolLoc, 0);
 
-            test_obj.Draw(modelLoc);
+
+            test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
 
             view = to_antipode * view;
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_back));
+            glUniform1i(isbackhemisphereboolLoc, 1);
 
-            test_obj.Draw(modelLoc);
+            test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
