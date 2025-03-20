@@ -13,6 +13,6 @@ void main()
     if(uses_texture){
         FragColor = vec4(texture(diffuseTex,TexCoord).rgb * light, 1.f);
     } else {
-        FragColor = vec4(diffuse_color*light,1.f);
+        FragColor = vec4(diffuse_color,1.f);
     }
 }

@@ -6,6 +6,16 @@
 Object::Object(){
 }
 
+void Object::Delete() {
+    if (uses_texture) {
+        glDeleteTextures(1, &textureID);
+        textureID = 0;
+    };
+    vao.Delete();
+    vbo.Delete();
+    ebo.Delete();
+}
+
 void Object::clear() {
     vertex_data.clear();
     indices.clear();
@@ -46,7 +56,6 @@ void Object::loadTexture(const std::string& path) {
     if (data) {
 
         GLenum format = (nrChannels == 3) ? GL_RGB : GL_RGBA;
-        printf("w: %i, h: %i, channels: %i\n",width,height,nrChannels);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         uses_texture = true;
@@ -78,6 +87,8 @@ void Object::Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint 
 
 void Object::loadMesh(const char* path) {
     clear();
+    element_type = GL_TRIANGLES;
+
     bool already_loaded_a_texture = false;
 
 	Assimp::Importer importer;
@@ -133,7 +144,6 @@ void Object::loadMesh(const char* path) {
             indices.push_back(face.mIndices[2]);
         }
         if (!already_loaded_a_texture) {
-            //printf("mNumFaces: %du, mNumVertices: %du.\n",mesh->mNumFaces,mesh->mNumVertices);
             aiMaterial* material = pScene->mMaterials[mesh->mMaterialIndex];
 
             //LOADTEXTURES
@@ -143,7 +153,6 @@ void Object::loadMesh(const char* path) {
                 std::filesystem::path texPath(str.C_Str());
                 std::string fileName = texPath.filename().string();
                 std::string texturePath = "Textures\\" + fileName;
-                printf("Detected diffuse texture: %s, loading from path %s. Original path: %s\n", fileName.c_str(), texturePath.c_str(), str.C_Str());
                 uses_texture = true;
                 loadTexture(texturePath);
 
@@ -161,9 +170,45 @@ void Object::loadMesh(const char* path) {
     //printf("Loaded mesh with %du vertices and %du indices.", vertex_data.size() / 10, indices.size());
 }
 
-void Object::greatArc(glm::vec4 start, glm::vec4 end) {
+void Object::greatArc(glm::vec4 start, glm::vec4 end, glm::vec3 color) {
     clear();
+    if (uses_texture) {
+        glDeleteTextures(1, &textureID);
+        textureID = 0;
+    }
+    uses_texture = false;
+    diffuse_color = color;
+    element_type = GL_LINES;
 
+    vertex_data.push_back(start.x);
+    vertex_data.push_back(start.y);
+    vertex_data.push_back(start.z);
+    vertex_data.push_back(start.w);
+    //Normals = vertex for great circles
+    vertex_data.push_back(start.x);
+    vertex_data.push_back(start.y);
+    vertex_data.push_back(start.z);
+    vertex_data.push_back(start.w);
+    //Junk UV coords
+    vertex_data.push_back(0.f);
+    vertex_data.push_back(0.f);
+
+    vertex_data.push_back(end.x);
+    vertex_data.push_back(end.y);
+    vertex_data.push_back(end.z);
+    vertex_data.push_back(end.w);
+    //Normals = vertex for great circles
+    vertex_data.push_back(end.x);
+    vertex_data.push_back(end.y);
+    vertex_data.push_back(end.z);
+    vertex_data.push_back(end.w);
+    //Junk UV coords
+    vertex_data.push_back(0.f);
+    vertex_data.push_back(0.f);
+
+    indices.push_back(0);
+    indices.push_back(1);
+    linkToBufferObjects();
 }
 
 void Object::debugPrintVertexData(size_t start, size_t end) {

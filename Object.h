@@ -30,6 +30,8 @@ class Object {
 public:
 	Object();
 
+	void Delete();
+
 	void Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc);
 
 	void loadMesh(const char* path);
@@ -39,7 +41,7 @@ public:
 	void circle(glm::vec4 center, float radius, unsigned int resolution);
 
 	void greatCircle(glm::vec4 pointA, glm::vec4 pointB, unsigned int resolution);
-	void greatArc(glm::vec4 start, glm::vec4 end);
+	void greatArc(glm::vec4 start, glm::vec4 end, glm::vec3 color);
 
 	void debugPrintVertexData(size_t start, size_t end);
 

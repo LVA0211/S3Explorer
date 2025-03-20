@@ -69,6 +69,21 @@
         return glm::mat4(1.0f) + sin(angle) * firstMat + (cos(angle) - 1.0f) * secondMat;
     }
 
+    glm::mat4 rotate4D(double angle, int axis1, int axis2) {
+        glm::mat4 rotationMatrix(1.0f); // Identity matrix
+
+        float cosA = cos(angle);
+        float sinA = sin(angle);
+
+        // Set 2D rotation in the selected plane
+        rotationMatrix[axis1][axis1] = cosA;
+        rotationMatrix[axis1][axis2] = -sinA;
+        rotationMatrix[axis2][axis1] = sinA;
+        rotationMatrix[axis2][axis2] = cosA;
+
+        return rotationMatrix;
+    }
+
     int main()
     {
         // Initialize GLFW
@@ -82,7 +97,7 @@
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Create window
-        GLFWwindow* window = glfwCreateWindow(800, 600, "S3", NULL, NULL);
+        GLFWwindow* window = glfwCreateWindow(1080, 1080, "S3", NULL, NULL);
 
         //Check if windows was created
         if (!window) {
@@ -94,6 +109,8 @@
         //Do other shit
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         // Load OpenGL function pointers with GLAD
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -113,74 +130,9 @@
         test_obj.loadMesh("Meshes\\tiny_teapet.gltf");
         test_obj.transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
 
-        // Triangle vertices
-        GLfloat vertices_test_cube[] = {
-            // Position of vertices (x, y, z)
-            0.1f,  0.1f,  0.1f, 1.0f,   1.f, 1.f, 1.f,
-            0.1f,  0.1f, -0.1f, 1.0f,    1.f, 1.f, 0.f,
-            0.1f, -0.1f,  0.1f, 1.0f,    1.f, 0.f, 1.f,
-            0.1f, -0.1f, -0.1f, 1.0f,    1.f, 0.f, 0.f,
-            -0.1f, 0.1f,  0.1f, 1.0f,    0.f, 1.f, 1.f,
-            -0.1f, 0.1f, -0.1f, 1.0f,    0.f, 1.f, 0.f,
-            -0.1f,-0.1f,  0.1f, 1.0f,    0.f, 0.f, 1.f,
-            -0.1f,-0.1f, -0.1f, 1.0f,    0.f, 0.f, 0.f,
-        };
-
-        GLfloat vertices[] = {
-            // Position of vertices (x, y, z)
-            0.07f, 0.0f, 0.f, 1.0f,   1.f, 0.f, 0.f,
-            -0.07f, 0.1f, 0.f, 1.0f,   1.f, 0.f, 0.f,
-            -0.07f, -0.1f, 0.f, 1.0f,   1.f, 0.f, 0.f,
-
-            0.07f, 0.0f, 0.3f, 1.0f,   0.f, 0.f, 1.f,
-            -0.07f, 0.1f, 0.3f, 1.0f,   0.f, 0.f, 1.f,
-            -0.07f, -0.1f, 0.3f, 1.0f,   0.f, 0.f, 1.f,
-
-            1.f,0.f,0.f,0.f, 1.f,0.f,0.f,
-            0.f,1.f,0.f,0.f, 0.f,1.f,0.f,
-            0.f,0.f,1.f,0.f, 0.f,0.f,1.f,
-        };
-
-        GLuint indices[] = {
-            0,1,2,
-            3,4,5,
-            6,7,8
-        };
-
-        GLuint indices_test_cube[] = {
-            0,1,3,
-            3,2,0,
-
-            4,5,7,
-            7,6,4,
-
-            0,1,5,
-            5,4,0,
-
-            2,3,7,
-            7,6,2,
-
-            0,2,6,
-            6,4,0,
-
-            1,3,7,
-            7,5,1,
-        };
-
-        VAO VAO1;
-        VAO1.Bind();
-
-        VBO VBO1;
-        VBO1.SetBufferData(vertices, sizeof(vertices));
-        EBO EBO1;
-        EBO1.SetBufferData(indices, sizeof(indices));
-
-        VAO1.linkAttrib(VBO1, 0, 4, GL_FLOAT, 7 * sizeof(float), (void*)0);
-        VAO1.linkAttrib(VBO1, 1, 3, GL_FLOAT, 7 * sizeof(float), (void*)(4*sizeof(float)));
-
-        VAO1.Unbind();
-        VBO1.Unbind();
-        EBO1.Unbind();
+        Object arc_1;
+        arc_1.greatArc(glm::vec4(0.f,0.f,0.f,1.f), glm::vec4(0.f, 0.f, -1.f, 0.f), glm::vec3(1.f,0.f,0.f));
+        arc_1.debugPrintVertexData(0, 20);
 
         const float blind_spot = 0.001f;
 
@@ -215,12 +167,7 @@
             0.f, 0.f, 0.5f, 1.f
         );
         //rotate by pi in wz
-        glm::mat4 to_antipode = glm::mat4(
-            1.f, 0.f, 0.f, 0.f,
-            0.f, 1.f, 0.f, 0.f,
-            0.f, 0.f, -1.f, 0.f,
-            0.f, 0.f, 0.f, -1.f
-        );
+        glm::mat4 to_antipode = glm::mat4(-1.f);
 
         //----------------------------
         //COmbining matrices for efficiency
@@ -236,13 +183,17 @@
         float last_time = 0.0f;
         unsigned int frame_count = 0;
 
+        double xpos = 0.0, ypos = 0.0;
+        double prevxpos = 0.0, prevypos = 0.0;
+        double deltaX = 0.0, deltaY = 0.0;
+
         // Set uniform values for transformation matrices
         GLint modelLoc = shaderProgram.getUniformLocation("model");
         GLint viewLoc = shaderProgram.getUniformLocation("view");
         GLint projLoc = shaderProgram.getUniformLocation("projection");
         GLint samplerLoc = shaderProgram.getUniformLocation("diffuseTex");
         GLint usestextureboolLoc = shaderProgram.getUniformLocation("uses_texture");
-        GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffusecolorLoc");
+        GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffuse_color");
         GLint isbackhemisphereboolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
 
         // Main render loop
@@ -267,6 +218,20 @@
                 camera = camera * rotmove;
 
             }
+
+            glfwGetCursorPos(window, &xpos, &ypos);
+            deltaX = xpos - prevxpos;
+            deltaY = ypos - prevypos;
+
+            prevxpos = xpos;
+            prevypos = ypos;
+
+            if (abs(deltaX) > 0.000001) {
+                camera = camera * rotate4D(deltaX * delta, 0, 2);
+            }
+            if (abs(deltaY) > 0.000001) {
+                camera = camera * rotate4D(-deltaY * delta, 1, 2);
+            }
             view = glm::inverse(camera);
 
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -278,6 +243,7 @@
 
 
             test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+            arc_1.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
 
             view = to_antipode * view;
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
@@ -285,6 +251,7 @@
             glUniform1i(isbackhemisphereboolLoc, 1);
 
             test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+            arc_1.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -294,10 +261,9 @@
             frame_count++;
         }
 
-        // Cleanup
-        VAO1.Delete();
-        VBO1.Delete();
-        EBO1.Delete();
+        test_obj.Delete();
+        arc_1.Delete();
+
         shaderProgram.Delete();
 
         glfwTerminate();
