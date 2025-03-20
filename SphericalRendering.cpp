@@ -82,7 +82,7 @@
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Create window
-        GLFWwindow* window = glfwCreateWindow(800, 600, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", NULL, NULL);
+        GLFWwindow* window = glfwCreateWindow(800, 600, "S3", NULL, NULL);
 
         //Check if windows was created
         if (!window) {
