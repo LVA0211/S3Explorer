@@ -139,7 +139,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animations.cpp" />
     <ClCompile Include="EBO.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_demo.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_draw.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_impl_glfw.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_tables.cpp" />
+    <ClCompile Include="External\include\imGUI\imgui_widgets.cpp" />
     <ClCompile Include="External\src\glad.c" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="shaderClass.cpp" />
@@ -148,7 +156,16 @@
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animations.h" />
     <ClInclude Include="EBO.h" />
+    <ClInclude Include="External\include\imGUI\imconfig.h" />
+    <ClInclude Include="External\include\imGUI\imgui.h" />
+    <ClInclude Include="External\include\imGUI\imgui_impl_glfw.h" />
+    <ClInclude Include="External\include\imGUI\imgui_impl_opengl3.h" />
+    <ClInclude Include="External\include\imGUI\imgui_internal.h" />
+    <ClInclude Include="External\include\imGUI\imstb_rectpack.h" />
+    <ClInclude Include="External\include\imGUI\imstb_textedit.h" />
+    <ClInclude Include="External\include\imGUI\imstb_truetype.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="shaderClass.h" />
     <ClInclude Include="VAO.h" />
@@ -157,6 +174,7 @@
   <ItemGroup>
     <None Include="default.frag" />
     <None Include="default.vert" />
+    <None Include="Meshes\gauss.gltf" />
     <None Include="Meshes\single_triangle.stl" />
     <None Include="Meshes\teapot_tiny.stl" />
     <None Include="Meshes\tiny_teapet.gltf" />
@@ -164,6 +182,7 @@
     <None Include="Utah_teapot.stl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Meshes\Carl_Friedrich_Gauss.jpg" />
     <Image Include="Textures\aee.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

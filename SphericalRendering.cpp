@@ -1,4 +1,9 @@
     #define GLM_ENABLE_EXPERIMENTAL
+    #define _USE_MATH_DEFINES
+
+    #include "imGUI/imgui.h"
+    #include "imGUI/imgui_impl_glfw.h"
+    #include "imGUI/imgui_impl_opengl3.h"
 
     #include <glad/glad.h>
     #include <GLFW/glfw3.h>
@@ -8,18 +13,44 @@
     #include <glm/gtc/type_ptr.hpp>
     #include <glm/gtx/string_cast.hpp>
     #include <glm/gtx/norm.hpp>
+    #include <math.h>
 
     #include "VAO.h"
     #include "VBO.h"
     #include "EBO.h"
     #include "shaderClass.h"
     #include "Object.h"
+    #include "Animations.h"
 
 
     void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
         glViewport(0, 0, width, height);
     }
+
+    bool looking = true;
+
+    void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+        ImGuiIO& io = ImGui::GetIO();
+
+        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
+            looking = !looking;
+            if (looking) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+                io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+                io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+            }
+            else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                
+                io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+                io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+            }
+        }
+    }
+
+
 
     glm::vec4 get_direction_from_keys(GLFWwindow* window) {
         int W = glfwGetKey(window, GLFW_KEY_W);
@@ -28,6 +59,7 @@
         int D = glfwGetKey(window, GLFW_KEY_D);
         int SPACE = glfwGetKey(window, GLFW_KEY_SPACE);
         int SHIFT = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+
         glm::vec4 result = glm::vec4(0.0f);
 
         if (W == GLFW_PRESS) {
@@ -106,11 +138,25 @@
             return -1;
         }
 
+
         //Do other shit
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+        glfwSetKeyCallback(window, key_callback);
+    
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        //Initialize imGUI
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.IniFilename = "imguisave";
+        ImGui::StyleColorsLight();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 330");
+
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
         // Load OpenGL function pointers with GLAD
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -126,14 +172,54 @@
 
         //---End of Setup--//
 
-        Object test_obj;
-        test_obj.loadMesh("Meshes\\tiny_teapet.gltf");
-        test_obj.transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
+        //---OBJECT CREATION--//
+        std::vector<std::shared_ptr<Object>> allObjects = {
+            std::make_shared<Object>(),
+            std::make_shared<Object>(),
+            std::make_shared<Object>(),
+            std::make_shared<Object>()
+        };
+        //CUBE
 
-        Object arc_1;
-        arc_1.greatArc(glm::vec4(0.f,0.f,0.f,1.f), glm::vec4(0.f, 0.f, -1.f, 0.f), glm::vec3(1.f,0.f,0.f));
-        arc_1.debugPrintVertexData(0, 20);
+        enum ObjectID {
+            TEA_PET,   // 0
+            TETRA_TILING,   // 1
+            GLOBE,      // 2
+            GAUSS, //3
+        };
 
+        allObjects[TEA_PET]->loadMesh("Meshes\\tiny_teapet.gltf");
+        //allObjects[TEA_PET]->transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
+        allObjects[TEA_PET]->setTransformFromSpherical(0.f,0.f,0.f);
+        allObjects[TEA_PET]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+
+        allObjects[GLOBE]->loadMesh("Meshes\\globe.gltf");
+        allObjects[GLOBE]->setScaleForUnitSphericalSphere(0.4f);
+        allObjects[GLOBE]->setTransformFromSpherical(0.f, M_PI / 2.f, M_PI / 2.f);
+        //allObjects[GLOBE]->animationFunc = rotateInPlane(1.0f, glm::vec4(0.f, 0.f, 0.f, 1.f), glm::vec4(1.f,0.f,0.f,0.f));
+
+        allObjects[TETRA_TILING]->fromArray(
+            std::vector<GLfloat>{
+                1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, 0.f, -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            },
+            GL_LINES,
+            std::vector<GLuint>{0, 1, 0, 2, 0, 3, 0, 5, 0, 6, 0, 7, 1, 2, 1, 3, 1, 4, 1, 6, 1, 7, 2, 3, 2, 4, 2, 5, 2, 7, 3, 4, 3, 5, 3, 6, 4, 5, 4, 6, 4, 7, 5, 6, 5, 7, 6, 7, },
+            glm::vec3(0.f, 1.f, 0.f)
+        );
+
+        allObjects[GAUSS]->loadMesh("Meshes\\gauss.gltf");
+        allObjects[GAUSS]->setTransformFromSpherical(0.f, 0.f, M_PI/2.f);
+        allObjects[GAUSS]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
+
+
+        //---MORE SETUP---//
         const float blind_spot = 0.001f;
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -176,8 +262,7 @@
         glm::mat4 banana_back = to_back_NDC * proj_banana;
 
 
-        const float step_size = 0.000001f;
-        const float move_speed = 0.3f;
+        const float move_speed = 0.9f;
 
         float delta = 0.0f;
         float last_time = 0.0f;
@@ -187,8 +272,19 @@
         double prevxpos = 0.0, prevypos = 0.0;
         double deltaX = 0.0, deltaY = 0.0;
 
+        //-----------------------------------------//
+        //------------imGUI variables--------------//
+        //-----------------------------------------//
+        float test_floats[] = { 0.f,0.f,0.f };
+
+        float a = 0.f, b = 0.f, c = 0.f;
+        float size = 1.f;
+        float globe_radius = 1.f;
+
         // Set uniform values for transformation matrices
+        
         GLint modelLoc = shaderProgram.getUniformLocation("model");
+        GLint modelScaleLoc = shaderProgram.getUniformLocation("scale");
         GLint viewLoc = shaderProgram.getUniformLocation("view");
         GLint projLoc = shaderProgram.getUniformLocation("projection");
         GLint samplerLoc = shaderProgram.getUniformLocation("diffuseTex");
@@ -196,10 +292,10 @@
         GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffuse_color");
         GLint isbackhemisphereboolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
 
+
         // Main render loop
         while (!glfwWindowShouldClose(window))
         {
-
             //Calculate deltatime
             float current_time = glfwGetTime();
             delta = current_time - last_time;
@@ -226,45 +322,77 @@
             prevxpos = xpos;
             prevypos = ypos;
 
-            if (abs(deltaX) > 0.000001) {
-                camera = camera * rotate4D(deltaX * delta, 0, 2);
-            }
-            if (abs(deltaY) > 0.000001) {
-                camera = camera * rotate4D(-deltaY * delta, 1, 2);
-            }
+            if (looking) {
+                if (abs(deltaX) > 0.000001) {
+                    camera = camera * rotate4D(deltaX * delta, 0, 2);
+                }
+                if (abs(deltaY) > 0.000001) {
+                    camera = camera * rotate4D(-deltaY * delta, 1, 2);
+                }
+            };
             view = glm::inverse(camera);
+
+            allObjects[TEA_PET]->setTransformFromSpherical(a,b,c);
+            allObjects[GLOBE]->setScaleForUnitSphericalSphere(globe_radius);
 
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            //Let imGUI know that a new frame is in the making
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
             
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_front));
             glUniform1i(isbackhemisphereboolLoc, 0);
 
 
-            test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
-            arc_1.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+            for (const auto& obj : allObjects) {
+                obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+                if (obj->animationFunc) obj->animationFunc(*obj, current_time);
+            };
 
             view = to_antipode * view;
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_back));
             glUniform1i(isbackhemisphereboolLoc, 1);
 
-            test_obj.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
-            arc_1.Draw(modelLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+            for (const auto& obj : allObjects) {
+                obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+
+            };
+
+
+            ImGui::Begin("Utah Teapot");
+            ImGui::SliderFloat("a",&a,0.f,2*M_PI);
+            ImGui::SliderFloat("b", &b, 0.f, 2 * M_PI);
+            ImGui::SliderFloat("c", &c, 0.f, 2 * M_PI);
+            ImGui::SliderFloat3("scale", &allObjects[TEA_PET]->scale[0], 0.1f, 3.f);
+            ImGui::End();
+
+            ImGui::Begin("Globe");
+            ImGui::SliderFloat("radius", &globe_radius, 0.f, M_PI);
+            ImGui::End();
+
+            glm::vec3 test = glm::vec3(1.f);
+
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             glfwSwapBuffers(window);
             glfwPollEvents();
         
-
             //std::cout << glm::to_string(camera[3]) << std::endl;
             frame_count++;
         }
 
-        test_obj.Delete();
-        arc_1.Delete();
-
+        allObjects.clear();
         shaderProgram.Delete();
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
 
         glfwTerminate();
         return 0;

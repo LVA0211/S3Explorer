@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <functional>
 
 #include "VAO.h"
 #include "VBO.h"
@@ -29,12 +30,15 @@
 class Object {
 public:
 	Object();
+	~Object();
 
 	void Delete();
 
-	void Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc);
+	void Draw(GLint modelLoc, GLint modelScaleLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc);
+
 
 	void loadMesh(const char* path);
+	void fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color);
 
 	void sphere(glm::vec4 center, float radius, unsigned int resolution);
 
@@ -45,7 +49,14 @@ public:
 
 	void debugPrintVertexData(size_t start, size_t end);
 
+
+	glm::vec4 scale = glm::vec4(1.f);
 	glm::mat4 transform = glm::mat4(1.0f);
+
+	void setTransformFromSpherical(float a, float b, float c);
+	void setScaleForUnitSphericalSphere(float sphericalRadius);
+	
+	std::function<void(Object&, float)> animationFunc;
 private:
 	void setupBuffers();
 	void clear();

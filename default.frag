@@ -5,9 +5,11 @@ uniform sampler2D diffuseTex;
 uniform bool uses_texture;
 uniform vec3 diffuse_color;
 
-in vec3 color;
 in float light;
 in vec2 TexCoord;
+
+in vec4 normal;
+
 void main()
 {
     if(uses_texture){

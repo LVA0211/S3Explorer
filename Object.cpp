@@ -5,8 +5,7 @@
 
 Object::Object(){
 }
-
-void Object::Delete() {
+Object::~Object() {
     if (uses_texture) {
         glDeleteTextures(1, &textureID);
         textureID = 0;
@@ -19,6 +18,10 @@ void Object::Delete() {
 void Object::clear() {
     vertex_data.clear();
     indices.clear();
+    if (uses_texture) {
+        glDeleteTextures(1, &textureID);
+        textureID = 0;
+    }
 }
 
 void Object::linkToBufferObjects() {
@@ -69,7 +72,7 @@ void Object::loadTexture(const std::string& path) {
 }
 
 
-void Object::Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc) {
+void Object::Draw(GLint modelLoc, GLint modelScaleLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc) {
     if (uses_texture) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID);
@@ -78,12 +81,24 @@ void Object::Draw(GLint modelLoc, GLint samplerLoc, GLint textureboolLoc, GLint 
         glUniform3f(diffuseLoc, diffuse_color.r, diffuse_color.g, diffuse_color.b);
     }
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    glUniform4f(modelScaleLoc, scale.x,scale.y,scale.z,scale.w);
     glUniform1i(samplerLoc, 0);
     glUniform1i(textureboolLoc, uses_texture);
     vao.Bind();
     glDrawElements(element_type, indices.size(), GL_UNSIGNED_INT, 0);
     vao.Unbind();
 }
+
+void Object::fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color) {
+    clear();
+    Object::element_type = element_type;
+    Object::vertex_data = std::move(vertex_data);
+    Object::indices = std::move(indices);
+    Object::diffuse_color = diffuse_color;
+    uses_texture = false;
+
+    linkToBufferObjects();
+};
 
 void Object::loadMesh(const char* path) {
     clear();
@@ -93,7 +108,7 @@ void Object::loadMesh(const char* path) {
 
 	Assimp::Importer importer;
 
-    const aiScene* pScene = importer.ReadFile(path, aiProcess_Triangulate |aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
+    const aiScene* pScene = importer.ReadFile(path, aiProcess_Triangulate |aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
 
     if (!pScene || !pScene->mRootNode) {
         printf("Error parsing '%s': '%s'\n", path, importer.GetErrorString());
@@ -172,10 +187,6 @@ void Object::loadMesh(const char* path) {
 
 void Object::greatArc(glm::vec4 start, glm::vec4 end, glm::vec3 color) {
     clear();
-    if (uses_texture) {
-        glDeleteTextures(1, &textureID);
-        textureID = 0;
-    }
     uses_texture = false;
     diffuse_color = color;
     element_type = GL_LINES;
@@ -215,4 +226,41 @@ void Object::debugPrintVertexData(size_t start, size_t end) {
     std::copy(vertex_data.begin() + start, vertex_data.begin() + end,
         std::ostream_iterator<float>(std::cout, ", "));
     std::cout << std::endl;
+}
+
+void Object::setTransformFromSpherical(float a, float b, float c) {
+    float ca = cos(a);
+    float cb = cos(b);
+    float cc = cos(c);
+    
+    float sa = sin(a);
+    float sb = sin(b);
+    float sc = sin(c);
+
+    transform[0][0] = ca;
+    transform[0][1] = sa;
+    transform[0][2] = 0.f;
+    transform[0][3] = 0.f;
+
+    transform[1][0] = -sa*cb;
+    transform[1][1] = ca*cb;
+    transform[1][2] = sb;
+    transform[1][3] = 0.f;
+
+    transform[2][0] = sa*sb*cc;
+    transform[2][1] = -ca*sb*cc;
+    transform[2][2] = cb*cc;
+    transform[2][3] = sc;
+
+    transform[3][0] = -sa*sb*sc;
+    transform[3][1] = ca*sb*sc;
+    transform[3][2] = -cb*sc;
+    transform[3][3] = cc;
+}
+
+void Object::setScaleForUnitSphericalSphere(float sphericalRadius) {
+    float cosine = cos(sphericalRadius);
+    float sine = sin(sphericalRadius);
+
+    scale = glm::vec4(sine, sine, sine, cosine);
 }

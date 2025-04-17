@@ -22,6 +22,12 @@
     <Filter Include="Resource Files\Textures">
       <UniqueIdentifier>{07ecee26-0677-438e-a4f6-7800bba58a8e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\imGUI">
+      <UniqueIdentifier>{cdada383-1a1a-405e-bf1d-fa15dfe0791f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imGUI">
+      <UniqueIdentifier>{567fee20-cecc-4c41-b163-072df34a0bdc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SphericalRendering.cpp">
@@ -45,6 +51,30 @@
     <ClCompile Include="External\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_widgets.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_demo.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_draw.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_impl_glfw.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="External\include\imGUI\imgui_tables.cpp">
+      <Filter>Source Files\imGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Animations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Object.h">
@@ -60,6 +90,33 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imconfig.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imgui.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imgui_impl_glfw.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imgui_impl_opengl3.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imgui_internal.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imstb_rectpack.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imstb_textedit.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="External\include\imGUI\imstb_truetype.h">
+      <Filter>Header Files\imGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Animations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -85,9 +142,15 @@
     <None Include="Meshes\tiny_teapet.gltf">
       <Filter>Resource Files\Meshes</Filter>
     </None>
+    <None Include="Meshes\gauss.gltf">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Textures\aee.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="Meshes\Carl_Friedrich_Gauss.jpg">
       <Filter>Resource Files\Textures</Filter>
     </Image>
   </ItemGroup>
