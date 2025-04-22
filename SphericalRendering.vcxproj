@@ -175,6 +175,7 @@
     <None Include="default.frag" />
     <None Include="default.vert" />
     <None Include="Meshes\gauss.gltf" />
+    <None Include="Meshes\house.gltf" />
     <None Include="Meshes\single_triangle.stl" />
     <None Include="Meshes\teapot_tiny.stl" />
     <None Include="Meshes\tiny_teapet.gltf" />
@@ -184,6 +185,7 @@
   <ItemGroup>
     <Image Include="Meshes\Carl_Friedrich_Gauss.jpg" />
     <Image Include="Textures\aee.jpg" />
+    <Image Include="Textures\cottage_diffuse.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

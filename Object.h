@@ -29,8 +29,13 @@
 
 class Object {
 public:
-	Object();
+	Object(const std::string& name);
+
+	Object() = default;
+
 	~Object();
+
+	std::string name;
 
 	void Delete();
 

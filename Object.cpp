@@ -3,7 +3,8 @@
 
 #include "Object.h"
 
-Object::Object(){
+Object::Object(const std::string& name){
+    Object::name = name;
 }
 Object::~Object() {
     if (uses_texture) {

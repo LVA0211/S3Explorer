@@ -23,29 +23,52 @@
     #include "Animations.h"
 
 
+
     void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
         glViewport(0, 0, width, height);
     }
 
     bool looking = true;
+    int current_slide;
+    int total_slides;
 
     void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         ImGuiIO& io = ImGui::GetIO();
 
-        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
-            looking = !looking;
-            if (looking) {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (action == GLFW_PRESS) {
+            if (key == GLFW_KEY_ESCAPE) {
+                looking = !looking;
+                if (looking) {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-                io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
-                io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+                    io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+                    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+                }
+                else {
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+                    io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+                }
             }
-            else {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                
-                io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-                io.ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+
+            if (key == GLFW_KEY_LEFT) {
+                if (current_slide <= 0) {
+                    current_slide = total_slides - 1;
+                }
+                else {
+                    current_slide--;
+                }
+            }
+
+            if (key == GLFW_KEY_RIGHT) {
+                if (current_slide >= total_slides-1) {
+                    current_slide = 0;
+                }
+                else {
+                    current_slide++;
+                }
             }
         }
     }
@@ -101,6 +124,22 @@
         return glm::mat4(1.0f) + sin(angle) * firstMat + (cos(angle) - 1.0f) * secondMat;
     }
 
+    glm::mat4 get_rotcamera_matrix_from_angles(float yaw, float pitch) {
+        float ca = cos(yaw);
+        float sa = sin(yaw);
+        float cb = cos(pitch);
+        float sb = sin(pitch);
+
+        glm::mat4 result = glm::mat4(
+            ca, 0.f,-sa, 0.f,
+            -sa*sb, cb, -ca*sb, 0.f,
+            sa*cb, sb, ca*cb, 0.f,
+            0.f,0.f,0.f, 1.f
+        );
+
+        return result;
+    }
+
     glm::mat4 rotate4D(double angle, int axis1, int axis2) {
         glm::mat4 rotationMatrix(1.0f); // Identity matrix
 
@@ -115,6 +154,9 @@
 
         return rotationMatrix;
     }
+    
+
+
 
     int main()
     {
@@ -128,8 +170,13 @@
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
+        const float inv_aspect_ratio = 9.f/16.f;
+        const unsigned int window_width = 1920;
+        const unsigned int window_height = round(window_width * inv_aspect_ratio);
+
         // Create window
-        GLFWwindow* window = glfwCreateWindow(1080, 1080, "S3", NULL, NULL);
+        GLFWwindow* window = glfwCreateWindow(window_width, window_height, "S3", NULL, NULL);
 
         //Check if windows was created
         if (!window) {
@@ -174,10 +221,11 @@
 
         //---OBJECT CREATION--//
         std::vector<std::shared_ptr<Object>> allObjects = {
-            std::make_shared<Object>(),
-            std::make_shared<Object>(),
-            std::make_shared<Object>(),
-            std::make_shared<Object>()
+            std::make_shared<Object>("Utah Teapet"),
+            std::make_shared<Object>("Grid"),
+            std::make_shared<Object>("Globus"),
+            std::make_shared<Object>("Gauss"),
+            std::make_shared<Object>("Huis"),
         };
         //CUBE
 
@@ -186,6 +234,7 @@
             TETRA_TILING,   // 1
             GLOBE,      // 2
             GAUSS, //3
+            HOUSE, //4
         };
 
         allObjects[TEA_PET]->loadMesh("Meshes\\tiny_teapet.gltf");
@@ -218,16 +267,37 @@
         allObjects[GAUSS]->setTransformFromSpherical(0.f, 0.f, M_PI/2.f);
         allObjects[GAUSS]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
 
+        allObjects[HOUSE]->loadMesh("Meshes\\house.gltf");
+        allObjects[HOUSE]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
+        allObjects[HOUSE]->setTransformFromSpherical(0.f,0.f,0.f);
+
+
+
+        std::vector<std::vector<ObjectID>> slides = {
+            {TEA_PET,GAUSS},
+            {HOUSE},
+            {TEA_PET}
+        };
+
+        total_slides = slides.size();
+        current_slide = 0;
 
         //---MORE SETUP---//
-        const float blind_spot = 0.001f;
+        float blind_spot = 0.001f;
+        float FOVX = M_PI/2.f;
+
+        float w = tan(FOVX / 2.f);
+        float h = w * inv_aspect_ratio;
+
 
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 camera = glm::mat4(1.0f);
+        glm::mat4 camera_rotation = glm::mat4(1.0f);
+
         glm::mat4 view;
         glm::mat4 proj_banana = glm::mat4(
-            1.f, 0.f, 0.f, 0.f,
-            0.f, 1.f, 0.f, 0.f,
+            1.f/w, 0.f, 0.f, 0.f,
+            0.f, 1.f/h, 0.f, 0.f,
             0.f, 0.f, 0.f, -1.f,
             0.f, 0.f, -blind_spot, 0.f
         );
@@ -264,13 +334,19 @@
 
         const float move_speed = 0.9f;
 
+       
+        float current_time = 0.0f;
         float delta = 0.0f;
-        float last_time = 0.0f;
+        float last_time = glfwGetTime();
         unsigned int frame_count = 0;
 
         double xpos = 0.0, ypos = 0.0;
         double prevxpos = 0.0, prevypos = 0.0;
+        glfwGetCursorPos(window, &prevxpos, &prevypos);
         double deltaX = 0.0, deltaY = 0.0;
+
+        float yaw = 0.0f;
+        float pitch = 0.0f;
 
         //-----------------------------------------//
         //------------imGUI variables--------------//
@@ -279,7 +355,10 @@
 
         float a = 0.f, b = 0.f, c = 0.f;
         float size = 1.f;
-        float globe_radius = 1.f;
+        float globe_radius = 0.5f;
+
+        float light_falloff = 0.5f;
+        float normal_falloff = 1.f;
 
         // Set uniform values for transformation matrices
         
@@ -292,16 +371,32 @@
         GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffuse_color");
         GLint isbackhemisphereboolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
 
+        GLint lightFalloffLoc = shaderProgram.getUniformLocation("light_falloff");
+        GLint normalFalloffLoc = shaderProgram.getUniformLocation("normal_falloff");
+
 
         // Main render loop
         while (!glfwWindowShouldClose(window))
         {
-            //Calculate deltatime
-            float current_time = glfwGetTime();
-            delta = current_time - last_time;
-            last_time = current_time;
-       
-            shaderProgram.Activate();
+
+            //Mouse things
+            if (looking) {
+                if (abs(deltaX) > 0.000001f || abs(deltaY) > 0.000001f) {
+                    yaw += deltaX * delta;
+                    pitch += deltaY * delta;
+
+                    if (pitch > M_PI / 2.f) {
+                        pitch = M_PI / 2.f;
+                    }
+                    else if (pitch < -M_PI / 2.f) {
+                        pitch = -M_PI / 2.f;
+                    }
+
+                    camera_rotation = get_rotcamera_matrix_from_angles(yaw, pitch);
+                }
+            };
+
+            //Move things
 
             glm::vec4 direction = get_direction_from_keys(window);
 
@@ -309,33 +404,20 @@
 
                 direction = glm::normalize(direction);
 
-                glm::mat4 rotmove = get_rotmove_matrix_from_direction(direction, move_speed * delta);
+                glm::mat4 rotmove = get_rotmove_matrix_from_direction(camera_rotation * direction, move_speed * delta);
 
                 camera = camera * rotmove;
 
             }
 
-            glfwGetCursorPos(window, &xpos, &ypos);
-            deltaX = xpos - prevxpos;
-            deltaY = ypos - prevypos;
 
-            prevxpos = xpos;
-            prevypos = ypos;
-
-            if (looking) {
-                if (abs(deltaX) > 0.000001) {
-                    camera = camera * rotate4D(deltaX * delta, 0, 2);
-                }
-                if (abs(deltaY) > 0.000001) {
-                    camera = camera * rotate4D(-deltaY * delta, 1, 2);
-                }
-            };
-            view = glm::inverse(camera);
+            view = glm::inverse(camera* camera_rotation);
 
             allObjects[TEA_PET]->setTransformFromSpherical(a,b,c);
             allObjects[GLOBE]->setScaleForUnitSphericalSphere(globe_radius);
 
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            shaderProgram.Activate();
+            glClearColor(0.f,0.f,0.f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             //Let imGUI know that a new frame is in the making
@@ -349,8 +431,11 @@
 
 
             for (const auto& obj : allObjects) {
-                obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
                 if (obj->animationFunc) obj->animationFunc(*obj, current_time);
+            };
+
+            for (const auto& objID : slides[current_slide]) {
+                allObjects[objID]->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
             };
 
             view = to_antipode * view;
@@ -358,9 +443,8 @@
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_back));
             glUniform1i(isbackhemisphereboolLoc, 1);
 
-            for (const auto& obj : allObjects) {
-                obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
-
+            for (const auto& objID : slides[current_slide]) {
+                allObjects[objID]->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
             };
 
 
@@ -375,7 +459,50 @@
             ImGui::SliderFloat("radius", &globe_radius, 0.f, M_PI);
             ImGui::End();
 
-            glm::vec3 test = glm::vec3(1.f);
+            ImGui::Begin("Lighting");
+            ImGui::Text("pitch = %f, yaw = %f", pitch, yaw);
+
+            if (ImGui::SliderAngle("FOVx", &FOVX, 0.f, 179.f)) {
+                w = tan(FOVX / 2.f);
+                h = w * inv_aspect_ratio;
+                proj_banana = glm::mat4(
+                    1.f / w, 0.f, 0.f, 0.f,
+                    0.f, 1.f / h, 0.f, 0.f,
+                    0.f, 0.f, 0.f, -1.f,
+                    0.f, 0.f, -blind_spot, 0.f
+                );
+                banana_front = to_front_NDC * proj_banana;
+                banana_back = to_back_NDC * proj_banana;
+            };
+            //ImGui::SliderFloat("Blind Spot", &blind_spot, 0.001f, 0.1f)
+            if (ImGui::SliderFloat("light falloff factor", &light_falloff, 0.f, 1.f)) glUniform1f(lightFalloffLoc,light_falloff);
+            if (ImGui::SliderFloat("normal falloff factor", &normal_falloff, 0.f, 2.f)) glUniform1f(normalFalloffLoc, normal_falloff);
+            ImGui::End();
+
+            ImGui::Begin("Slide Controls");
+
+            if (ImGui::Button("Prev") && current_slide > 0) {
+                current_slide--;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Next") && current_slide < total_slides - 1) {
+                current_slide++;
+            }
+
+            //Scrollable slide selector
+            ImGui::BeginListBox("Slides");
+            for (int i = 0; i < total_slides; ++i) {
+                bool isSelected = (current_slide == i);
+                std::string label = "Slide " + std::to_string(i);
+                if (ImGui::Selectable(label.c_str(), &isSelected)) {
+                    current_slide = i;
+                };
+            };
+            ImGui::EndListBox();
+
+            ImGui::End();
 
 
             ImGui::Render();
@@ -383,8 +510,22 @@
 
             glfwSwapBuffers(window);
             glfwPollEvents();
-        
-            //std::cout << glm::to_string(camera[3]) << std::endl;
+            
+            //Register all inputs + Recalc time
+            
+            current_time = glfwGetTime();
+
+            delta = current_time - last_time;
+            last_time = current_time;
+
+            glfwGetCursorPos(window, &xpos, &ypos);
+            deltaX = xpos - prevxpos;
+            deltaY = ypos - prevypos;
+
+            prevxpos = xpos;
+            prevypos = ypos;
+
+
             frame_count++;
         }
 

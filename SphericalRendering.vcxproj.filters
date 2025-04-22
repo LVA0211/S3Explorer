@@ -145,12 +145,18 @@
     <None Include="Meshes\gauss.gltf">
       <Filter>Resource Files\Meshes</Filter>
     </None>
+    <None Include="Meshes\house.gltf">
+      <Filter>Resource Files\Meshes</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Textures\aee.jpg">
       <Filter>Resource Files\Textures</Filter>
     </Image>
     <Image Include="Meshes\Carl_Friedrich_Gauss.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="Textures\cottage_diffuse.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
   </ItemGroup>

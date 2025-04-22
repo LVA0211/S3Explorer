@@ -11,35 +11,27 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform bool is_back_hemisphere;
 
+uniform float light_falloff = 0.1f;
+uniform float normal_falloff = 1.f;
+
 out float light;
 out vec2 TexCoord;
+
+out vec4 localNormal;
+out vec4 local;
 
 
 const vec4 localCam = vec4(0,0,0,1);
 
-void main() {
-
-    mat4 scalematrix = mat4(scale.x,0.f,0.f,0.f, 0.f,scale.y,0.f,0.f, 0.f,0.f,scale.z,0.f, 0.f,0.f,0.f,scale.w);
+void main() {   
     
-    vec4 local = normalize(view * model * scalematrix * aPos);
 
-    mat4 normalMatrix = transpose(inverse(view * model * scalematrix));
+    local = normalize(view * model * (scale * aPos));
 
-    vec4 localNormal = normalMatrix * aNormal;
+    localNormal = normalize(view * model * aNormal);
 
-    localNormal = normalize(localNormal - dot(localNormal,local) * local);
 
-    vec4 projected = projection * local;
-    gl_Position = projected;
+    gl_Position = projection * local;
 
-    float cosdist = dot(localCam,local);
-
-    float dist = acos(cosdist);
-
-    if(is_back_hemisphere){
-        dist = 2.f*PI - dist;
-    }
-
-    light = abs(dot(normalize(localCam-cosdist * local), localNormal))/( 1.f + dist*0.5f);
     TexCoord = aUV;
 }

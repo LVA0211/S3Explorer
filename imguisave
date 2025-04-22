@@ -7,6 +7,14 @@ Pos=16,277
 Size=285,123
 
 [Window][Globe]
-Pos=763,148
+Pos=600,74
 Size=250,85
+
+[Window][Lighting]
+Pos=55,60
+Size=509,238
+
+[Window][Slide Controls]
+Pos=96,499
+Size=368,161
 

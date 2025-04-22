@@ -42,7 +42,6 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile)
 	glCompileShader(fragmentShader);
 	// Create Shader Program Object and get its reference
 	ID = glCreateProgram();
-	std::cout << ID << std::endl;
 	// Attach the Vertex and Fragment Shaders to the Shader Program
 	glAttachShader(ID, vertexShader);
 	glAttachShader(ID, fragmentShader);
