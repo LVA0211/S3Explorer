@@ -75,13 +75,13 @@
 
 
 
-    glm::vec4 get_direction_from_keys(GLFWwindow* window) {
+    glm::vec4 get_direction_from_keys(GLFWwindow* window, bool allowY) {
         int W = glfwGetKey(window, GLFW_KEY_W);
         int A = glfwGetKey(window, GLFW_KEY_A);
         int S = glfwGetKey(window, GLFW_KEY_S);
         int D = glfwGetKey(window, GLFW_KEY_D);
-        int SPACE = glfwGetKey(window, GLFW_KEY_SPACE);
-        int SHIFT = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+        int SPACE = allowY ? glfwGetKey(window, GLFW_KEY_SPACE) : 0;
+        int SHIFT = allowY ? glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) : 0;
 
         glm::vec4 result = glm::vec4(0.0f);
 
@@ -155,7 +155,9 @@
         return rotationMatrix;
     }
     
-
+    glm::mat4 constructHeightMatrix(double height) {
+        return rotate4D(height, 1, 3);
+    };
 
 
     int main()
@@ -226,6 +228,8 @@
             std::make_shared<Object>("Globus"),
             std::make_shared<Object>("Gauss"),
             std::make_shared<Object>("Huis"),
+            std::make_shared<Object>("Tetraeder"),
+            std::make_shared<Object>("Vloer")
         };
         //CUBE
 
@@ -235,16 +239,18 @@
             GLOBE,      // 2
             GAUSS, //3
             HOUSE, //4
+            TETRAHEDRON,
+            MAP
         };
 
         allObjects[TEA_PET]->loadMesh("Meshes\\tiny_teapet.gltf");
         //allObjects[TEA_PET]->transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
-        allObjects[TEA_PET]->setTransformFromSpherical(0.f,0.f,0.f);
+        allObjects[TEA_PET]->setSphericalCoordinates(0.f,0.f,0.f);
         allObjects[TEA_PET]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 
         allObjects[GLOBE]->loadMesh("Meshes\\globe.gltf");
         allObjects[GLOBE]->setScaleForUnitSphericalSphere(0.4f);
-        allObjects[GLOBE]->setTransformFromSpherical(0.f, M_PI / 2.f, M_PI / 2.f);
+        allObjects[GLOBE]->setSphericalCoordinates(0.f, M_PI / 2.f, M_PI / 2.f);
         //allObjects[GLOBE]->animationFunc = rotateInPlane(1.0f, glm::vec4(0.f, 0.f, 0.f, 1.f), glm::vec4(1.f,0.f,0.f,0.f));
 
         allObjects[TETRA_TILING]->fromArray(
@@ -263,18 +269,37 @@
             glm::vec3(0.f, 1.f, 0.f)
         );
 
+        constexpr float INV_SQRT3 = 0.5773502691896258f;
+
+        allObjects[TETRAHEDRON]->fromArray(
+            std::vector<GLfloat>{
+                1.0f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+        },
+            GL_TRIANGLES,
+            std::vector<GLuint>{0, 1, 2, 0, 1, 3, 0, 2, 3, 1, 2, 3},
+            glm::vec3(0.f, 1.f, 1.f)
+        );
+
         allObjects[GAUSS]->loadMesh("Meshes\\gauss.gltf");
-        allObjects[GAUSS]->setTransformFromSpherical(0.f, 0.f, M_PI/2.f);
+        allObjects[GAUSS]->setSphericalCoordinates(0.f, 0.f, M_PI/2.f);
         allObjects[GAUSS]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
 
         allObjects[HOUSE]->loadMesh("Meshes\\house.gltf");
-        allObjects[HOUSE]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
-        allObjects[HOUSE]->setTransformFromSpherical(0.f,0.f,0.f);
+        allObjects[HOUSE]->scale = glm::vec4(0.05f, 0.05f, 0.05f, 1.f);
+        allObjects[HOUSE]->rotateBasisAxis(1,3,0.2f);
+
+        allObjects[MAP]->loadMesh("Meshes\\map.gltf");
+        allObjects[MAP]->setScaleForUnitSphericalSphere(M_PI_2);
+        allObjects[MAP]->setSphericalCoordinates(0.f, -M_PI_2, M_PI_2);
 
 
 
         std::vector<std::vector<ObjectID>> slides = {
-            {TEA_PET,GAUSS},
+            {MAP},
+            {TEA_PET,GAUSS, TETRAHEDRON},
             {HOUSE},
             {TEA_PET}
         };
@@ -289,10 +314,14 @@
         float w = tan(FOVX / 2.f);
         float h = w * inv_aspect_ratio;
 
+        double height = 0.1;
+        const float move_speed = 0.9f;
+        const double rot_speed = 0.3;
+
 
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 camera = glm::mat4(1.0f);
-        glm::mat4 camera_rotation = glm::mat4(1.0f);
+        glm::mat4 height_matrix = constructHeightMatrix(height);
 
         glm::mat4 view;
         glm::mat4 proj_banana = glm::mat4(
@@ -330,10 +359,6 @@
         //----------------------------
         glm::mat4 banana_front = to_front_NDC * proj_banana;
         glm::mat4 banana_back = to_back_NDC * proj_banana;
-
-
-        const float move_speed = 0.9f;
-
        
         float current_time = 0.0f;
         float delta = 0.0f;
@@ -351,14 +376,20 @@
         //-----------------------------------------//
         //------------imGUI variables--------------//
         //-----------------------------------------//
-        float test_floats[] = { 0.f,0.f,0.f };
+        //-----------------------------------------//
 
         float a = 0.f, b = 0.f, c = 0.f;
         float size = 1.f;
         float globe_radius = 0.5f;
 
+        float map_coords[] = { 0.f, -M_PI_2, M_PI_2 };
+
         float light_falloff = 0.5f;
-        float normal_falloff = 1.f;
+        float normal_falloff = 0.f;
+
+        float step_size = 0.05f;
+
+        int camera_mode = 0;
 
         // Set uniform values for transformation matrices
         
@@ -380,44 +411,56 @@
         {
 
             //Mouse things
-            if (looking) {
+            /*if (looking) {
                 if (abs(deltaX) > 0.000001f || abs(deltaY) > 0.000001f) {
-                    yaw += deltaX * delta;
-                    pitch += deltaY * delta;
+                    if (camera_mode == 0) {
+                        yaw += deltaX * delta;
+                        pitch += deltaY * delta;
 
-                    if (pitch > M_PI / 2.f) {
-                        pitch = M_PI / 2.f;
-                    }
-                    else if (pitch < -M_PI / 2.f) {
-                        pitch = -M_PI / 2.f;
-                    }
+                        if (pitch > M_PI / 2.f) {
+                            pitch = M_PI / 2.f;
+                        }
+                        else if (pitch < -M_PI / 2.f) {
+                            pitch = -M_PI / 2.f;
+                        }
 
-                    camera_rotation = get_rotcamera_matrix_from_angles(yaw, pitch);
+                        camera_rotation = get_rotcamera_matrix_from_angles(yaw, pitch);
+                    }
+                    else if (camera_mode == 1) {
+                        camera_rotation *= rotate4D(deltaX*rot_speed*delta,3,0) * rotate4D(deltaY*rot_speed*delta, 3, 1);
+                    }
                 }
-            };
+            };*/
+
+            if (looking) {
+                camera *= rotate4D(deltaX * rot_speed * delta, 0, 2);
+                yaw += deltaY * rot_speed * delta;
+                if (camera_mode == 1) {
+                    camera *= rotate4D(deltaY * rot_speed * delta, 1, 2);
+                }
+            }
 
             //Move things
 
-            glm::vec4 direction = get_direction_from_keys(window);
+            glm::vec4 direction = get_direction_from_keys(window, camera_mode==1);
 
             if (glm::length2(direction) > 0.000001f) {
 
                 direction = glm::normalize(direction);
 
-                glm::mat4 rotmove = get_rotmove_matrix_from_direction(camera_rotation * direction, move_speed * delta);
+                glm::mat4 rotmove = get_rotmove_matrix_from_direction(direction, move_speed * delta);
 
                 camera = camera * rotmove;
 
             }
 
+            view = glm::inverse( (camera_mode == 0) ? (camera * height_matrix) * rotate4D(yaw, 1, 2) : camera * height_matrix);
 
-            view = glm::inverse(camera* camera_rotation);
-
-            allObjects[TEA_PET]->setTransformFromSpherical(a,b,c);
+            allObjects[TEA_PET]->setSphericalCoordinates(a,b,c);
             allObjects[GLOBE]->setScaleForUnitSphericalSphere(globe_radius);
 
             shaderProgram.Activate();
-            glClearColor(0.f,0.f,0.f, 1.0f);
+            glClearColor(0.f,0.f,0.f , 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             //Let imGUI know that a new frame is in the making
@@ -432,10 +475,7 @@
 
             for (const auto& obj : allObjects) {
                 if (obj->animationFunc) obj->animationFunc(*obj, current_time);
-            };
-
-            for (const auto& objID : slides[current_slide]) {
-                allObjects[objID]->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+                if (obj->visible) obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
             };
 
             view = to_antipode * view;
@@ -443,10 +483,10 @@
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_back));
             glUniform1i(isbackhemisphereboolLoc, 1);
 
-            for (const auto& objID : slides[current_slide]) {
-                allObjects[objID]->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+            for (const auto& obj : allObjects) {
+                if (obj->animationFunc) obj->animationFunc(*obj, current_time);
+                if (obj->visible) obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
             };
-
 
             ImGui::Begin("Utah Teapot");
             ImGui::SliderFloat("a",&a,0.f,2*M_PI);
@@ -459,8 +499,7 @@
             ImGui::SliderFloat("radius", &globe_radius, 0.f, M_PI);
             ImGui::End();
 
-            ImGui::Begin("Lighting");
-            ImGui::Text("pitch = %f, yaw = %f", pitch, yaw);
+            ImGui::Begin("Settings");
 
             if (ImGui::SliderAngle("FOVx", &FOVX, 0.f, 179.f)) {
                 w = tan(FOVX / 2.f);
@@ -474,17 +513,26 @@
                 banana_front = to_front_NDC * proj_banana;
                 banana_back = to_back_NDC * proj_banana;
             };
+
+            ImGui::Text("Camera modus (maximale n):");
+            ImGui::RadioButton("Enkel \"horizontaal\"", &camera_mode, 0);
+            ImGui::RadioButton("Vrij draaien", &camera_mode, 1);
+
+
             //ImGui::SliderFloat("Blind Spot", &blind_spot, 0.001f, 0.1f)
             if (ImGui::SliderFloat("light falloff factor", &light_falloff, 0.f, 1.f)) glUniform1f(lightFalloffLoc,light_falloff);
             if (ImGui::SliderFloat("normal falloff factor", &normal_falloff, 0.f, 2.f)) glUniform1f(normalFalloffLoc, normal_falloff);
+
+            if (ImGui::Button("Reset position")) {
+                camera = glm::mat4(1.0f);
+                yaw = 0.;
+            }
             ImGui::End();
 
             ImGui::Begin("Slide Controls");
-
             if (ImGui::Button("Prev") && current_slide > 0) {
                 current_slide--;
             }
-
             ImGui::SameLine();
 
             if (ImGui::Button("Next") && current_slide < total_slides - 1) {
@@ -502,6 +550,72 @@
             };
             ImGui::EndListBox();
 
+            ImGui::End();
+
+            ImGui::Begin("AAA");
+            for (size_t i = 0; i < allObjects.size(); ++i) {
+                std::shared_ptr<Object>& objPtr = allObjects[i];
+
+                std::string headerLabel = objPtr->name + "##" + std::to_string(i);
+
+                ImGui::PushID(i);
+                ImGui::Checkbox("##Visible", &objPtr->visible);
+                ImGui::SameLine();
+
+                bool open = ImGui::CollapsingHeader(headerLabel.c_str());
+                if (open) {
+                    ImGui::Indent(2.0f);
+                    if (ImGui::SliderFloat3("Position", &objPtr->spherical_coords[0],0.f,2*M_PI)) {
+                        objPtr->updateTransformFromSphericalCoordinates();
+                    };
+                    ImGui::InputFloat4("Scale", &objPtr->scale.x);
+
+                    // Centered up button
+                    float buttonSize = 40.0f;
+                    float spacing = ImGui::GetStyle().ItemSpacing.x;
+                    float startX = ImGui::GetCursorPosX();
+
+                    ImGui::Text("Move:");
+
+                    // First row: Up, Forward, Down
+                    ImGui::SetCursorPosX(startX);
+                    if (ImGui::Button("Up", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(1, 3, step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Forward", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(2, 3, -step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Down", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(1, 3, -step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+                    
+                    // Second row: Left, Down, Right
+                    ImGui::SetCursorPosX(startX);
+                    if (ImGui::Button("Left", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(0, 3, step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Backward", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(2, 3, step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Right", ImVec2(buttonSize, buttonSize))) {
+                        objPtr->rotateBasisAxis(0, 3, -step_size);
+                        objPtr->updateSphericalCoordinatesFromTransform();
+                    }
+
+                    ImGui::Unindent();
+                }
+                ImGui::PopID();
+            }
             ImGui::End();
 
 

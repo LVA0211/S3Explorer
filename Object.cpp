@@ -229,34 +229,84 @@ void Object::debugPrintVertexData(size_t start, size_t end) {
     std::cout << std::endl;
 }
 
-void Object::setTransformFromSpherical(float a, float b, float c) {
-    float ca = cos(a);
-    float cb = cos(b);
-    float cc = cos(c);
+void Object::rotateGlobal(glm::vec4 direction, float angle) {
+        glm::mat4 firstMat = glm::mat4(0.0f);
+
+        firstMat[0][3] = -direction.x;
+        firstMat[1][3] = -direction.y;
+        firstMat[2][3] = -direction.z;
+
+        firstMat[3][0] = direction.x;
+        firstMat[3][1] = direction.y;
+        firstMat[3][2] = direction.z;
+
+        glm::mat4 secondMat = glm::outerProduct(direction, direction);
+
+        transform *= glm::mat4(1.0f) + sin(angle) * firstMat + (cos(angle) - 1.0f) * secondMat;
+}
+
+void Object::rotateBasisAxis(int axis1, int axis2, float angle) {
+    glm::mat4 rotationMatrix(1.0f); // Identity matrix
+
+    float cosA = cos(angle);
+    float sinA = sin(angle);
+
+    // Set 2D rotation in the selected plane
+    rotationMatrix[axis1][axis1] = cosA;
+    rotationMatrix[axis1][axis2] = -sinA;
+    rotationMatrix[axis2][axis1] = sinA;
+    rotationMatrix[axis2][axis2] = cosA;
+
+    transform *= rotationMatrix;
+}
+
+void Object::setSphericalCoordinates(float a, float b, float c) {
+
+    spherical_coords = glm::vec3(a, b, c);
     
-    float sa = sin(a);
-    float sb = sin(b);
-    float sc = sin(c);
+    updateTransformFromSphericalCoordinates();
+}
+
+void Object::updateTransformFromSphericalCoordinates() {
+    float ca = cos(spherical_coords[0]);
+    float cb = cos(spherical_coords[1]);
+    float cc = cos(spherical_coords[2]);
+
+    float sa = sin(spherical_coords[0]);
+    float sb = sin(spherical_coords[1]);
+    float sc = sin(spherical_coords[2]);
 
     transform[0][0] = ca;
     transform[0][1] = sa;
     transform[0][2] = 0.f;
     transform[0][3] = 0.f;
 
-    transform[1][0] = -sa*cb;
-    transform[1][1] = ca*cb;
+    transform[1][0] = -sa * cb;
+    transform[1][1] = ca * cb;
     transform[1][2] = sb;
     transform[1][3] = 0.f;
 
-    transform[2][0] = sa*sb*cc;
-    transform[2][1] = -ca*sb*cc;
-    transform[2][2] = cb*cc;
+    transform[2][0] = sa * sb * cc;
+    transform[2][1] = -ca * sb * cc;
+    transform[2][2] = cb * cc;
     transform[2][3] = sc;
 
-    transform[3][0] = -sa*sb*sc;
-    transform[3][1] = ca*sb*sc;
-    transform[3][2] = -cb*sc;
+    transform[3][0] = -sa * sb * sc;
+    transform[3][1] = ca * sb * sc;
+    transform[3][2] = -cb * sc;
     transform[3][3] = cc;
+}
+
+void Object::updateSphericalCoordinatesFromTransform() {
+    float ca = transform[0][0];
+    float cb = transform[1][1] / ca;
+    float cc = transform[3][3];
+
+    float sa = transform[0][1];
+    float sb = transform[1][2];
+    float sc = transform[2][3];
+
+    spherical_coords = glm::vec3(atan2(sa,ca), atan2(sb, cb), atan2(sc, cc));
 }
 
 void Object::setScaleForUnitSphericalSphere(float sphericalRadius) {

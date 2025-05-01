@@ -3,18 +3,46 @@ Pos=60,60
 Size=400,400
 
 [Window][Utah Teapot]
-Pos=16,277
+Pos=1525,187
 Size=285,123
 
 [Window][Globe]
-Pos=600,74
-Size=250,85
+Pos=514,31
+Size=250,174
 
 [Window][Lighting]
-Pos=55,60
-Size=509,238
+Pos=984,167
+Size=509,168
 
 [Window][Slide Controls]
-Pos=96,499
+Pos=42,37
 Size=368,161
+
+[Window][Settings]
+Pos=4,292
+Size=429,185
+
+[Window][Dear ImGui Demo]
+Pos=650,20
+Size=550,680
+
+[Window][Example: Assets Browser]
+Pos=60,60
+Size=800,480
+
+[Window][Dear ImGui Metrics/Debugger]
+Pos=60,60
+Size=339,358
+
+[Window][Example: Custom rendering]
+Pos=60,60
+Size=623,414
+
+[Window][AAA]
+Pos=14,617
+Size=303,405
+
+[Table][0xB6880529,2]
+RefScale=13
+Column 0  Sort=0v
 

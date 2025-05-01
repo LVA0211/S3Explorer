@@ -57,16 +57,26 @@ public:
 
 	glm::vec4 scale = glm::vec4(1.f);
 	glm::mat4 transform = glm::mat4(1.0f);
+	
+	void rotateGlobal(glm::vec4 direction, float angle);
+	void rotateBasisAxis(int axis1, int axis2, float angle);
 
-	void setTransformFromSpherical(float a, float b, float c);
+	glm::vec3 spherical_coords = glm::vec3(0.f);
+	void setSphericalCoordinates(float a, float b, float c);
+	void updateTransformFromSphericalCoordinates();
+	void updateSphericalCoordinatesFromTransform();
+
 	void setScaleForUnitSphericalSphere(float sphericalRadius);
 	
 	std::function<void(Object&, float)> animationFunc;
+	bool visible = true;
+
 private:
-	void setupBuffers();
+
 	void clear();
 	void linkToBufferObjects();
 	void loadTexture(const std::string& path);
+
 
 	bool uses_texture = false;
 	glm::vec3 diffuse_color = glm::vec3(0.f);

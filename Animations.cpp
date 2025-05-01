@@ -15,3 +15,9 @@ AnimationFunction rotateInPlane(float speed, glm::vec4 u, glm::vec4 v) {
             + glm::sin(angle) * B;
     };
 }
+
+AnimationFunction spinObject() {
+    return [](Object& obj, float time) {
+        obj.rotateBasisAxis(0, 3, 0.005f);
+    };
+}
