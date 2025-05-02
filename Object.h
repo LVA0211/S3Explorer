@@ -39,11 +39,18 @@ public:
 
 	void Delete();
 
-	void Draw(GLint modelLoc, GLint modelScaleLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc);
-
+	void Draw(GLint modelLoc, GLint model_scaleLoc, GLint samplerLoc, GLint texture_boolLoc, GLint diffuseLoc, GLint project_normal_to_sphere_boolLoc);
 
 	void loadMesh(const char* path);
-	void fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color);
+	/// <summary>
+	/// Set the vertices+indices manually.
+	/// </summary>
+	/// <param name="vertex_data">Vertex data in the format: vert position (4 floats), vert normal (4 floats), UV coords (2 floats)</param>
+	/// <param name="element_type">OpenGL element type to draw. E.g. GL_TRIANGLES</param>
+	/// <param name="indices">Indices as an array of uints</param>
+	/// <param name="diffuse_color">Color of mesh</param>
+	/// <param name="project_normals_to_sphere">set to true if normals exist in a 3D subspace (w=0), false otherwise</param>
+	void fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color, bool project_normals_to_sphere);
 
 	void sphere(glm::vec4 center, float radius, unsigned int resolution);
 
@@ -79,6 +86,7 @@ private:
 
 
 	bool uses_texture = false;
+	bool project_normals_to_sphere = false;
 	glm::vec3 diffuse_color = glm::vec3(0.f);
 	//(X,Y,Z,W, nX,nY,nZ,nW, U,V)
 	std::vector<GLfloat> vertex_data;

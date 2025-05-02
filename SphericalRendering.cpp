@@ -140,7 +140,7 @@
         return result;
     }
 
-    glm::mat4 rotate4D(double angle, int axis1, int axis2) {
+    glm::mat4 rotateInBasisPlane(double angle, int axis1, int axis2) {
         glm::mat4 rotationMatrix(1.0f); // Identity matrix
 
         float cosA = cos(angle);
@@ -156,7 +156,7 @@
     }
     
     glm::mat4 constructHeightMatrix(double height) {
-        return rotate4D(height, 1, 3);
+        return rotateInBasisPlane(height, 1, 3);
     };
 
 
@@ -190,17 +190,20 @@
 
         //Do other shit
         glfwMakeContextCurrent(window);
+        //DISABLE VSYNC
+        glfwSwapInterval(1);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
         glfwSetKeyCallback(window, key_callback);
     
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        
 
         //Initialize imGUI
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.IniFilename = "imguisave";
-        ImGui::StyleColorsLight();
+        ImGui::StyleColorsDark();
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 330");
 
@@ -215,6 +218,7 @@
 
         // Enable depth
         glEnable(GL_DEPTH_TEST);
+        glLineWidth(3.f);
 
         // Compile vertex shader
         Shader shaderProgram("default.vert", "default.frag");
@@ -229,9 +233,9 @@
             std::make_shared<Object>("Gauss"),
             std::make_shared<Object>("Huis"),
             std::make_shared<Object>("Tetraeder"),
-            std::make_shared<Object>("Vloer")
+            std::make_shared<Object>("Vloer"),
+            std::make_shared<Object>("Betegeling"),
         };
-        //CUBE
 
         enum ObjectID {
             TEA_PET,   // 0
@@ -240,18 +244,16 @@
             GAUSS, //3
             HOUSE, //4
             TETRAHEDRON,
-            MAP
+            MAP,
+            MAP_TILING
         };
 
         allObjects[TEA_PET]->loadMesh("Meshes\\tiny_teapet.gltf");
-        //allObjects[TEA_PET]->transform = glm::mat4(0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f, 0.f, 1.f);
-        allObjects[TEA_PET]->setSphericalCoordinates(0.f,0.f,0.f);
         allObjects[TEA_PET]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 
         allObjects[GLOBE]->loadMesh("Meshes\\globe.gltf");
         allObjects[GLOBE]->setScaleForUnitSphericalSphere(0.4f);
         allObjects[GLOBE]->setSphericalCoordinates(0.f, M_PI / 2.f, M_PI / 2.f);
-        //allObjects[GLOBE]->animationFunc = rotateInPlane(1.0f, glm::vec4(0.f, 0.f, 0.f, 1.f), glm::vec4(1.f,0.f,0.f,0.f));
 
         allObjects[TETRA_TILING]->fromArray(
             std::vector<GLfloat>{
@@ -266,22 +268,24 @@
             },
             GL_LINES,
             std::vector<GLuint>{0, 1, 0, 2, 0, 3, 0, 5, 0, 6, 0, 7, 1, 2, 1, 3, 1, 4, 1, 6, 1, 7, 2, 3, 2, 4, 2, 5, 2, 7, 3, 4, 3, 5, 3, 6, 4, 5, 4, 6, 4, 7, 5, 6, 5, 7, 6, 7, },
-            glm::vec3(0.f, 1.f, 0.f)
+            glm::vec3(0.f, 1.f, 0.f),
+            false
         );
 
         constexpr float INV_SQRT3 = 0.5773502691896258f;
-
         allObjects[TETRAHEDRON]->fromArray(
             std::vector<GLfloat>{
-                1.0f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-                0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-                0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-                0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                1.0f, 0.f, 0.f, 0.f, 0.f, -INV_SQRT3, -INV_SQRT3, -INV_SQRT3, 0.f, 0.f,
+                0.f, 1.f, 0.f, 0.f, -INV_SQRT3, 0.f, -INV_SQRT3, -INV_SQRT3, 0.f, 0.f,
+                0.f, 0.f, 1.f, 0.f, -INV_SQRT3, -INV_SQRT3, 0.f, -INV_SQRT3, 0.f, 0.f,
+                0.f, 0.f, 0.f, 1.f, -INV_SQRT3, -INV_SQRT3, -INV_SQRT3, 0.f, 0.f, 0.f,
         },
             GL_TRIANGLES,
             std::vector<GLuint>{0, 1, 2, 0, 1, 3, 0, 2, 3, 1, 2, 3},
-            glm::vec3(0.f, 1.f, 1.f)
+            glm::vec3(0.f, 1.f, 1.f),
+            false
         );
+        allObjects[TETRAHEDRON]->visible = false;
 
         allObjects[GAUSS]->loadMesh("Meshes\\gauss.gltf");
         allObjects[GAUSS]->setSphericalCoordinates(0.f, 0.f, M_PI/2.f);
@@ -295,18 +299,10 @@
         allObjects[MAP]->setScaleForUnitSphericalSphere(M_PI_2);
         allObjects[MAP]->setSphericalCoordinates(0.f, -M_PI_2, M_PI_2);
 
-
-
-        std::vector<std::vector<ObjectID>> slides = {
-            {MAP},
-            {TEA_PET,GAUSS, TETRAHEDRON},
-            {HOUSE},
-            {TEA_PET}
-        };
-
-        total_slides = slides.size();
-        current_slide = 0;
-
+        allObjects[MAP_TILING]->loadMesh("Meshes\\map_tiling.gltf");
+        allObjects[MAP_TILING]->setScaleForUnitSphericalSphere(M_PI_2);
+        allObjects[MAP_TILING]->setSphericalCoordinates(0.f, -M_PI_2, M_PI_2);
+        allObjects[MAP_TILING]->visible = false;
         //---MORE SETUP---//
         float blind_spot = 0.001f;
         float FOVX = M_PI/2.f;
@@ -385,7 +381,7 @@
         float map_coords[] = { 0.f, -M_PI_2, M_PI_2 };
 
         float light_falloff = 0.5f;
-        float normal_falloff = 0.f;
+        float normal_falloff = 0.5f;
 
         float step_size = 0.05f;
 
@@ -394,16 +390,17 @@
         // Set uniform values for transformation matrices
         
         GLint modelLoc = shaderProgram.getUniformLocation("model");
-        GLint modelScaleLoc = shaderProgram.getUniformLocation("scale");
+        GLint model_scaleLoc = shaderProgram.getUniformLocation("scale");
         GLint viewLoc = shaderProgram.getUniformLocation("view");
         GLint projLoc = shaderProgram.getUniformLocation("projection");
         GLint samplerLoc = shaderProgram.getUniformLocation("diffuseTex");
-        GLint usestextureboolLoc = shaderProgram.getUniformLocation("uses_texture");
-        GLint diffusecolorLoc = shaderProgram.getUniformLocation("diffuse_color");
-        GLint isbackhemisphereboolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
+        GLint uses_texture_boolLoc = shaderProgram.getUniformLocation("uses_texture");
+        GLint diffuse_colorLoc = shaderProgram.getUniformLocation("diffuse_color");
+        GLint project_normals_to_sphereLoc = shaderProgram.getUniformLocation("project_normals_to_sphere");
+        GLint is_back_hemisphere_boolLoc = shaderProgram.getUniformLocation("is_back_hemisphere");
 
-        GLint lightFalloffLoc = shaderProgram.getUniformLocation("light_falloff");
-        GLint normalFalloffLoc = shaderProgram.getUniformLocation("normal_falloff");
+        GLint light_falloffLoc = shaderProgram.getUniformLocation("light_falloff");
+        GLint normal_falloffLoc = shaderProgram.getUniformLocation("normal_falloff");
 
 
         // Main render loop
@@ -433,10 +430,10 @@
             };*/
 
             if (looking) {
-                camera *= rotate4D(deltaX * rot_speed * delta, 0, 2);
+                camera *= rotateInBasisPlane(deltaX * rot_speed * delta, 0, 2);
                 yaw += deltaY * rot_speed * delta;
                 if (camera_mode == 1) {
-                    camera *= rotate4D(deltaY * rot_speed * delta, 1, 2);
+                    camera *= rotateInBasisPlane(deltaY * rot_speed * delta, 1, 2);
                 }
             }
 
@@ -454,7 +451,7 @@
 
             }
 
-            view = glm::inverse( (camera_mode == 0) ? (camera * height_matrix) * rotate4D(yaw, 1, 2) : camera * height_matrix);
+            view = glm::inverse( (camera_mode == 0) ? (camera * height_matrix) * rotateInBasisPlane(yaw, 1, 2) : camera);
 
             allObjects[TEA_PET]->setSphericalCoordinates(a,b,c);
             allObjects[GLOBE]->setScaleForUnitSphericalSphere(globe_radius);
@@ -470,34 +467,22 @@
             
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_front));
-            glUniform1i(isbackhemisphereboolLoc, 0);
+            glUniform1i(is_back_hemisphere_boolLoc, 0);
 
 
             for (const auto& obj : allObjects) {
                 if (obj->animationFunc) obj->animationFunc(*obj, current_time);
-                if (obj->visible) obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+                if (obj->visible) obj->Draw(modelLoc, model_scaleLoc, samplerLoc, uses_texture_boolLoc, diffuse_colorLoc, project_normals_to_sphereLoc);
             };
 
             view = to_antipode * view;
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(banana_back));
-            glUniform1i(isbackhemisphereboolLoc, 1);
+            glUniform1i(is_back_hemisphere_boolLoc, 1);
 
             for (const auto& obj : allObjects) {
-                if (obj->animationFunc) obj->animationFunc(*obj, current_time);
-                if (obj->visible) obj->Draw(modelLoc, modelScaleLoc, samplerLoc, usestextureboolLoc, diffusecolorLoc);
+                if (obj->visible) obj->Draw(modelLoc, model_scaleLoc, samplerLoc, uses_texture_boolLoc, diffuse_colorLoc, project_normals_to_sphereLoc);
             };
-
-            ImGui::Begin("Utah Teapot");
-            ImGui::SliderFloat("a",&a,0.f,2*M_PI);
-            ImGui::SliderFloat("b", &b, 0.f, 2 * M_PI);
-            ImGui::SliderFloat("c", &c, 0.f, 2 * M_PI);
-            ImGui::SliderFloat3("scale", &allObjects[TEA_PET]->scale[0], 0.1f, 3.f);
-            ImGui::End();
-
-            ImGui::Begin("Globe");
-            ImGui::SliderFloat("radius", &globe_radius, 0.f, M_PI);
-            ImGui::End();
 
             ImGui::Begin("Settings");
 
@@ -519,9 +504,8 @@
             ImGui::RadioButton("Vrij draaien", &camera_mode, 1);
 
 
-            //ImGui::SliderFloat("Blind Spot", &blind_spot, 0.001f, 0.1f)
-            if (ImGui::SliderFloat("light falloff factor", &light_falloff, 0.f, 1.f)) glUniform1f(lightFalloffLoc,light_falloff);
-            if (ImGui::SliderFloat("normal falloff factor", &normal_falloff, 0.f, 2.f)) glUniform1f(normalFalloffLoc, normal_falloff);
+            if (ImGui::SliderFloat("Vervalfactor door afstand", &light_falloff, 0.f, 1.f)) glUniform1f(light_falloffLoc,light_falloff);
+            if (ImGui::SliderFloat("Vervalfactor door normaalvectors", &normal_falloff, 0.f, 1.f)) glUniform1f(normal_falloffLoc, normal_falloff);
 
             if (ImGui::Button("Reset position")) {
                 camera = glm::mat4(1.0f);
@@ -529,30 +513,7 @@
             }
             ImGui::End();
 
-            ImGui::Begin("Slide Controls");
-            if (ImGui::Button("Prev") && current_slide > 0) {
-                current_slide--;
-            }
-            ImGui::SameLine();
-
-            if (ImGui::Button("Next") && current_slide < total_slides - 1) {
-                current_slide++;
-            }
-
-            //Scrollable slide selector
-            ImGui::BeginListBox("Slides");
-            for (int i = 0; i < total_slides; ++i) {
-                bool isSelected = (current_slide == i);
-                std::string label = "Slide " + std::to_string(i);
-                if (ImGui::Selectable(label.c_str(), &isSelected)) {
-                    current_slide = i;
-                };
-            };
-            ImGui::EndListBox();
-
-            ImGui::End();
-
-            ImGui::Begin("AAA");
+            ImGui::Begin("Objecten");
             for (size_t i = 0; i < allObjects.size(); ++i) {
                 std::shared_ptr<Object>& objPtr = allObjects[i];
 
@@ -564,7 +525,7 @@
 
                 bool open = ImGui::CollapsingHeader(headerLabel.c_str());
                 if (open) {
-                    ImGui::Indent(2.0f);
+                    ImGui::Indent();
                     if (ImGui::SliderFloat3("Position", &objPtr->spherical_coords[0],0.f,2*M_PI)) {
                         objPtr->updateTransformFromSphericalCoordinates();
                     };
@@ -642,6 +603,8 @@
 
             frame_count++;
         }
+
+        printf("Average fps: %f", frame_count / current_time);
 
         allObjects.clear();
         shaderProgram.Delete();

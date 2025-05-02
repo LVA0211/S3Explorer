@@ -73,7 +73,7 @@ void Object::loadTexture(const std::string& path) {
 }
 
 
-void Object::Draw(GLint modelLoc, GLint modelScaleLoc, GLint samplerLoc, GLint textureboolLoc, GLint diffuseLoc) {
+void Object::Draw(GLint modelLoc, GLint model_scaleLoc, GLint samplerLoc, GLint texture_boolLoc, GLint diffuseLoc, GLint project_normal_to_sphere_boolLoc) {
     if (uses_texture) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID);
@@ -82,20 +82,22 @@ void Object::Draw(GLint modelLoc, GLint modelScaleLoc, GLint samplerLoc, GLint t
         glUniform3f(diffuseLoc, diffuse_color.r, diffuse_color.g, diffuse_color.b);
     }
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(transform));
-    glUniform4f(modelScaleLoc, scale.x,scale.y,scale.z,scale.w);
+    glUniform4f(model_scaleLoc, scale.x, scale.y, scale.z, scale.w);
     glUniform1i(samplerLoc, 0);
-    glUniform1i(textureboolLoc, uses_texture);
+    glUniform1i(texture_boolLoc, uses_texture);
+    glUniform1i(project_normal_to_sphere_boolLoc, project_normals_to_sphere);
     vao.Bind();
     glDrawElements(element_type, indices.size(), GL_UNSIGNED_INT, 0);
     vao.Unbind();
 }
 
-void Object::fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color) {
+void Object::fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_type, std::vector<GLuint>&& indices, glm::vec3 diffuse_color, bool project_normals_to_sphere) {
     clear();
     Object::element_type = element_type;
     Object::vertex_data = std::move(vertex_data);
     Object::indices = std::move(indices);
     Object::diffuse_color = diffuse_color;
+    Object::project_normals_to_sphere = project_normals_to_sphere;
     uses_texture = false;
 
     linkToBufferObjects();
@@ -104,6 +106,7 @@ void Object::fromArray(std::vector<GLfloat>&& vertex_data, unsigned int element_
 void Object::loadMesh(const char* path) {
     clear();
     element_type = GL_TRIANGLES;
+    project_normals_to_sphere = true;
 
     bool already_loaded_a_texture = false;
 
@@ -189,6 +192,7 @@ void Object::loadMesh(const char* path) {
 void Object::greatArc(glm::vec4 start, glm::vec4 end, glm::vec3 color) {
     clear();
     uses_texture = false;
+    project_normals_to_sphere = false;
     diffuse_color = color;
     element_type = GL_LINES;
 
