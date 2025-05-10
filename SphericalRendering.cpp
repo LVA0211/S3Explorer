@@ -92,10 +92,10 @@
             result.z += 1.0f;
         }
         if (A == GLFW_PRESS) {
-            result.x += 1.0f;
+            result.x -= 1.0f;
         }
         if (D == GLFW_PRESS) {
-            result.x -= 1.0f;
+            result.x += 1.0f;
         }
 
         if (SPACE == GLFW_PRESS) {
@@ -250,6 +250,9 @@
 
         allObjects[TEA_PET]->loadMesh("Meshes\\tiny_teapet.gltf");
         allObjects[TEA_PET]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+        allObjects[TEA_PET]->rotateBasisAxis(3,1,-0.1f);
+        allObjects[TEA_PET]->rotateBasisAxis(3, 0, -0.3f);
+        allObjects[TEA_PET]->updateSphericalCoordinatesFromTransform();
 
         allObjects[GLOBE]->loadMesh("Meshes\\globe.gltf");
         allObjects[GLOBE]->setScaleForUnitSphericalSphere(0.4f);
@@ -288,7 +291,10 @@
         allObjects[TETRAHEDRON]->visible = false;
 
         allObjects[GAUSS]->loadMesh("Meshes\\gauss.gltf");
-        allObjects[GAUSS]->setSphericalCoordinates(0.f, 0.f, M_PI/2.f);
+        allObjects[GAUSS]->rotateBasisAxis(3,2,M_PI_2 + 0.3f);
+        allObjects[GAUSS]->rotateBasisAxis(3, 1, -0.1f);
+        allObjects[GAUSS]->rotateBasisAxis(2, 1, -M_PI_2);
+        allObjects[GAUSS]->updateSphericalCoordinatesFromTransform();
         allObjects[GAUSS]->scale = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
 
         allObjects[HOUSE]->loadMesh("Meshes\\house.gltf");
@@ -367,18 +373,11 @@
         double deltaX = 0.0, deltaY = 0.0;
 
         float yaw = 0.0f;
-        float pitch = 0.0f;
 
         //-----------------------------------------//
         //------------imGUI variables--------------//
         //-----------------------------------------//
         //-----------------------------------------//
-
-        float a = 0.f, b = 0.f, c = 0.f;
-        float size = 1.f;
-        float globe_radius = 0.5f;
-
-        float map_coords[] = { 0.f, -M_PI_2, M_PI_2 };
 
         float light_falloff = 0.5f;
         float normal_falloff = 0.5f;
@@ -406,31 +405,10 @@
         // Main render loop
         while (!glfwWindowShouldClose(window))
         {
-
             //Mouse things
-            /*if (looking) {
-                if (abs(deltaX) > 0.000001f || abs(deltaY) > 0.000001f) {
-                    if (camera_mode == 0) {
-                        yaw += deltaX * delta;
-                        pitch += deltaY * delta;
-
-                        if (pitch > M_PI / 2.f) {
-                            pitch = M_PI / 2.f;
-                        }
-                        else if (pitch < -M_PI / 2.f) {
-                            pitch = -M_PI / 2.f;
-                        }
-
-                        camera_rotation = get_rotcamera_matrix_from_angles(yaw, pitch);
-                    }
-                    else if (camera_mode == 1) {
-                        camera_rotation *= rotate4D(deltaX*rot_speed*delta,3,0) * rotate4D(deltaY*rot_speed*delta, 3, 1);
-                    }
-                }
-            };*/
 
             if (looking) {
-                camera *= rotateInBasisPlane(deltaX * rot_speed * delta, 0, 2);
+                camera *= rotateInBasisPlane(-deltaX * rot_speed * delta, 0, 2);
                 yaw += deltaY * rot_speed * delta;
                 if (camera_mode == 1) {
                     camera *= rotateInBasisPlane(deltaY * rot_speed * delta, 1, 2);
@@ -452,9 +430,6 @@
             }
 
             view = glm::inverse( (camera_mode == 0) ? (camera * height_matrix) * rotateInBasisPlane(yaw, 1, 2) : camera);
-
-            allObjects[TEA_PET]->setSphericalCoordinates(a,b,c);
-            allObjects[GLOBE]->setScaleForUnitSphericalSphere(globe_radius);
 
             shaderProgram.Activate();
             glClearColor(0.f,0.f,0.f , 1.0f);
